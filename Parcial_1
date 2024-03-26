@@ -1,0 +1,86 @@
+#include <Arduino.h>
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_log.h"
+#include "driver/gpio.h"
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // Ancho de la pantalla OLED en píxeles
+#define SCREEN_HEIGHT 64 // Alto de la pantalla OLED en píxeles
+#define OLED_RESET -1    // Pin de reset (o -1 si se comparte el pin de reset del Arduino)
+#define SCREEN_ADDRESS 0x3C ///< Ver la hoja de datos para la dirección; 0x3D para 128x64, 0x3C para 128x32
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+#define BTN 35
+#define SW 34
+#define CLK_X 25
+#define CLK_Y 25
+
+hw_timer_t *Timer0_Cfg = NULL;
+
+void conf_sw_btn(void);
+void conf_timer(void);
+
+void IRAM_ATTR isr_start_stop() {
+  // Código de la interrupción de inicio/parada
+}
+
+void IRAM_ATTR isr_clear() {
+  // Código de la interrupción de borrado
+}
+
+void IRAM_ATTR Timer0_ISR() {
+  // Código de la interrupción del timer
+}
+
+void setup() {
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(15, 0);
+  display.println(F("Cronometro PIAI"));
+  display.drawLine(0, 10, 127, 10, SSD1306_WHITE);
+  display.display();
+
+  display.setTextSize(2);
+  display.setCursor(CLK_X, CLK_Y);
+  display.println(F("00"));
+  display.setCursor(CLK_X + 25, CLK_Y);
+  display.println(F(":"));
+  display.setCursor(CLK_X + 38, CLK_Y);
+  display.println(F("00"));
+  display.setCursor(CLK_X + 62, CLK_Y);
+  display.println(F(":"));
+  display.setCursor(CLK_X + 77, CLK_Y);
+  display.println(F("0"));
+  display.display();
+
+  conf_sw_btn();
+  conf_timer();
+}
+
+void loop() {
+  // Tu código de bucle aquí
+}
+
+void conf_sw_btn(void) {
+  pinMode(SW, INPUT);
+  pinMode(BTN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(SW), isr_start_stop, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BTN), isr_clear, FALLING);
+}
+
+void conf_timer(void) {
+  Timer0_Cfg = timerBegin(0, 250, true); // Timer de hardware 0, dividiendo la frecuencia base de 80MHz por 80 (1000kHz o 1MHz)
+  timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);
+  timerAlarmWrite(Timer0_Cfg, 4000, true); // Interrupción cada 1000 microsegundos (1ms)
+  timerAlarmEnable(Timer0_Cfg);
+}
