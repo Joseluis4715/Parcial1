@@ -19,8 +19,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define BTN 35
 #define SW 34
-#define CLK_X 25
-#define CLK_Y 25
 
 hw_timer_t *Timer0_Cfg = NULL;
 
@@ -43,26 +41,30 @@ void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
 
-  display.setTextSize(1);
+  // display.setTextSize(2);
+  // display.setCursor(5, 40);
+  // display.println(F(""));
+  // display.display();
+  // display.setCursor(5, 30);
+  // display.println(F(""));
+  // display.setCursor(5 ,20);
+  // display.println(F(" "));
+  // display.display();
+
+  display.setTextSize(0.5);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(15, 0);
-  display.println(F("Cronometro PIAI"));
-  display.drawLine(0, 10, 127, 10, SSD1306_WHITE);
+  display.setCursor(5, 10);
+  display.println(F("CICLO UTIL:  %"));
+  display.setCursor(5, 25);
+  display.println(F("ESTADO: "));
+  display.setCursor(5, 40);
+  display.println(F("SECUENCIA:"));
+  display.setCursor(5, 55);
+  display.println(F("INTRO CICLO UTIL:"));
+  display.drawLine(0, 50, 127, 50, SSD1306_WHITE);
   display.display();
 
-  display.setTextSize(2);
-  display.setCursor(CLK_X, CLK_Y);
-  display.println(F("00"));
-  display.setCursor(CLK_X + 25, CLK_Y);
-  display.println(F(":"));
-  display.setCursor(CLK_X + 38, CLK_Y);
-  display.println(F("00"));
-  display.setCursor(CLK_X + 62, CLK_Y);
-  display.println(F(":"));
-  display.setCursor(CLK_X + 77, CLK_Y);
-  display.println(F("0"));
-  display.display();
-
+  
   conf_sw_btn();
   conf_timer();
 }
