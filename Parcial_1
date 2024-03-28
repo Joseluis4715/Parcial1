@@ -24,7 +24,7 @@ unsigned long tinicio;
 unsigned long periodo = 1000;
 
 int currentLed = 0; // Índice del LED actualmente encendido
-
+int actualLed = 0;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define BTN 35
@@ -46,6 +46,8 @@ byte colPins[COLS] = {14, 12, 13, 23}; // Columnas
 Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 void secuencia1(void);
+void secuencia2(void);
+void secuencia3(void);
 void conf_sw_btn(void);
 void conf_timer(void);
 
@@ -66,9 +68,6 @@ void IRAM_ATTR Timer0_ISR()
 
 void setup()
 {
-  for (int i = 0; i < leds; i++) {
-    pinMode(pinesLeds[i], OUTPUT);
-  }
 
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
@@ -89,10 +88,9 @@ void setup()
   conf_sw_btn();
   conf_timer();
 }
-
 void loop()
 {
-  secuencia1();
+  
 }
 
 void conf_sw_btn(void)
@@ -111,9 +109,13 @@ void conf_timer(void)
   timerAlarmEnable(Timer0_Cfg);
 }
 
-void secuencia1()
+void secuencia1(void)
 {
-  unsigned long tactual = millis();
+  for (int i = 0; i < leds; i++)
+  {
+    pinMode(pinesLeds[i], OUTPUT);
+  }
+  tactual = millis();
   if (tactual - tinicio >= periodo)
   {
     tinicio = tactual;
@@ -129,4 +131,24 @@ void secuencia1()
     currentLed = (currentLed + 1) % leds;
   }
 }
+void secuencia2(void)
+{
+  for (int i = 0; i < leds; i++)
+  {
+    pinMode(pinesLeds[i], OUTPUT);
+  }
+
+  unsigned long tactual = millis();
+  if (tactual - tinicio >= periodo)
+  {
+    tinicio = tactual;
+
+    // Intercambia el estado de los LEDs (encendidos por apagados y viceversa)
+    for (int i = 0; i < leds; i++)
+    {
+      digitalWrite(pinesLeds[i], !digitalRead(pinesLeds[i])); // Invierte el estado del LED
+    }
+  }
+}
+
 
