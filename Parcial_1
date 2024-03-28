@@ -16,6 +16,15 @@
 #define OLED_RESET -1       // Pin de reset (o -1 si se comparte el pin de reset del Arduino)
 #define SCREEN_ADDRESS 0x3C ///< Ver la hoja de datos para la dirección; 0x3D para 128x64, 0x3C para 128x32
 
+const int leds = 8;
+int pinesLeds[leds] = {15, 2, 4, 16, 17, 5, 18, 19};
+
+unsigned long tactual;
+unsigned long tinicio;
+unsigned long periodo = 1000;
+
+int currentLed = 0; // Índice del LED actualmente encendido
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define BTN 35
@@ -57,6 +66,10 @@ void IRAM_ATTR Timer0_ISR()
 
 void setup()
 {
+  for (int i = 0; i < leds; i++) {
+    pinMode(pinesLeds[i], OUTPUT);
+  }
+
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
 
@@ -79,6 +92,7 @@ void setup()
 
 void loop()
 {
+  secuencia1();
 }
 
 void conf_sw_btn(void)
@@ -96,19 +110,23 @@ void conf_timer(void)
   timerAlarmWrite(Timer0_Cfg, 4000, true); // Interrupción cada 1000 microsegundos (1ms)
   timerAlarmEnable(Timer0_Cfg);
 }
+
 void secuencia1()
 {
-  unsigned long tactual;
-  unsigned long periodo = 1000;
-  
-  const int leds= 8;
-  int pinesLeds[leds]={15,2,4,16,17,5,18,19};
+  unsigned long tactual = millis();
+  if (tactual - tinicio >= periodo)
+  {
+    tinicio = tactual;
 
-  for(int i = 0; i<leds; i++){
-    pinMode(pinesLeds[i],OUTPUT);
+    // Apaga el LED en la posición anterior a currentLed
+    int anteriorLed = (currentLed == 0) ? leds - 1 : currentLed - 1;
+    digitalWrite(pinesLeds[anteriorLed], LOW);
+
+    // Enciende el LED en la posición currentLed
+    digitalWrite(pinesLeds[currentLed], HIGH);
+
+    // Actualiza el valor de currentLed para el siguiente ciclo
+    currentLed = (currentLed + 1) % leds;
   }
-  
-
-
-
 }
+
