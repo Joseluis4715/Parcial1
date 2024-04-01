@@ -16,6 +16,8 @@
 #define OLED_RESET -1       // Pin de reset (o -1 si se comparte el pin de reset del Arduino)
 #define SCREEN_ADDRESS 0x3C ///< Ver la hoja de datos para la dirección; 0x3D para 128x64, 0x3C para 128x32
 
+#define pinPWM 32
+
 const int leds = 8;
 int pinesLeds[leds] = {15, 2, 4, 16, 17, 5, 18, 19};
 
@@ -47,7 +49,7 @@ Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 void secuencia1(void);
 void secuencia2(void);
-void secuencia3(void);
+
 void conf_sw_btn(void);
 void conf_timer(void);
 
@@ -55,19 +57,20 @@ void IRAM_ATTR isr_start_stop()
 {
   // Código de la interrupción de inicio/parada
 }
-
-void IRAM_ATTR isr_clear()
+void IRAM_ATTR isr_secuencia()
 {
   // Código de la interrupción de borrado
 }
-
 void IRAM_ATTR Timer0_ISR()
 {
-  // Código de la interrupción del timer
+  // Alternate the logic value of the MOSFET pin
+  digitalWrite(pinPWM, !digitalRead(pinPWM));
 }
 
 void setup()
 {
+  pinMode(pinPWM, OUTPUT);
+  conf_timer();
 
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
@@ -92,20 +95,19 @@ void loop()
 {
   
 }
-
 void conf_sw_btn(void)
 {
   pinMode(SW, INPUT);
   pinMode(BTN, INPUT);
   attachInterrupt(digitalPinToInterrupt(SW), isr_start_stop, FALLING);
-  attachInterrupt(digitalPinToInterrupt(BTN), isr_clear, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BTN), isr_secuencia, FALLING);
 }
 
 void conf_timer(void)
 {
-  Timer0_Cfg = timerBegin(0, 250, true); // Timer de hardware 0, dividiendo la frecuencia base de 80MHz por 80 (1000kHz o 1MHz)
+  Timer0_Cfg = timerBegin(0, 80, true);
   timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);
-  timerAlarmWrite(Timer0_Cfg, 4000, true); // Interrupción cada 1000 microsegundos (1ms)
+  timerAlarmWrite(Timer0_Cfg, 2000, true);
   timerAlarmEnable(Timer0_Cfg);
 }
 
@@ -150,5 +152,3 @@ void secuencia2(void)
     }
   }
 }
-
-
