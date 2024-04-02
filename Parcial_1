@@ -14,6 +14,10 @@
 
 const int leds = 8;
 int pinesLeds[leds] = {15, 2, 4, 16, 17, 5, 18, 19};
+int primerGrupo[4] = {pinesLeds[0], pinesLeds[1], pinesLeds[2], pinesLeds[3]};
+
+// Segundo grupo de LEDs (pines del 4 al 7)
+int segundoGrupo[4] = {pinesLeds[4], pinesLeds[5], pinesLeds[6], pinesLeds[7]};
 
 unsigned long tactual;
 unsigned long tinicio;
@@ -48,6 +52,7 @@ void secuencia1(void);
 void secuencia2(void);
 void secuencia3(void);
 void secuencia4(void);
+void secuencia5(void);
 
 void conf_sw_btn(void);
 void conf_timer(void);
@@ -98,9 +103,9 @@ void setup()
 }
 void loop()
 {
-  secuencia4();
+  secuencia5();
   char tecla = keypad.getKey();
-  
+
   if (tecla != NO_KEY)
   {
     if (tecla == '#')
@@ -108,7 +113,7 @@ void loop()
       valor = constrain(cadena.toInt(), 0, 100); // Limita el valor entre 0 y 100
       display.setCursor(80, 10);
       display.print(valor); // Imprime el valor ingresado en pantalla
-      cadena = ""; // Reinicia la cadena para la próxima entrada
+      cadena = "";          // Reinicia la cadena para la próxima entrada
     }
     else if (isdigit(tecla) && cadena.length() < 3) // Solo agrega dígitos si la cadena tiene menos de 3 caracteres
     {
@@ -119,7 +124,6 @@ void loop()
   }
   display.display(); // Actualiza la pantalla después de cada iteración
 }
-
 
 void conf_sw_btn(void)
 {
@@ -169,39 +173,69 @@ void secuencia2(void)
     }
   }
 }
-
 void secuencia3(void)
 {
   unsigned long tactual = millis();
-  if(tactual - tinicio >= 300){
+  if (tactual - tinicio >= 300)
+  {
     tinicio = tactual;
 
     digitalWrite(pinesLeds[currentLed], !digitalRead(pinesLeds[currentLed]));
 
-    if(incremento){
+    if (incremento)
+    {
       currentLed++;
-      if(currentLed == leds){
+      if (currentLed == leds)
+      {
         currentLed = leds - 2;
         incremento = false;
       }
-    }else{
-      currentLed--; 
-      if(currentLed < 0){
+    }
+    else
+    {
+      currentLed--;
+      if (currentLed < 0)
+      {
         currentLed = 1;
         incremento = true;
       }
     }
   }
 }
-
-void secuencia4(void){
+void secuencia4(void)
+{
   unsigned long tactual = millis();
 
-  if(tactual - tinicio >= periodo){
+  if (tactual - tinicio >= periodo)
+  {
     digitalWrite(pinesLeds[currentLed], !digitalRead(pinesLeds[currentLed]));
 
     tinicio = tactual;
 
     currentLed = (currentLed + 1) % leds;
+  }
+}
+void secuencia5(void)
+{
+  tactual = millis();
+  // Verificar si ha pasado el tiempo suficiente para cambiar de estado
+  if (tactual - tinicio >= periodo)
+  {
+    tinicio = tactual;
+    static bool primerGrupoEncendido = false; // Estado inicial
+
+    // Cambiar el estado del primer grupo de LEDs (pines del 0 al 3)
+    for (int i = 0; i < 4; i++)
+    {
+      digitalWrite(primerGrupo[i], primerGrupoEncendido ? LOW : HIGH);
+    }
+
+    // Cambiar el estado del segundo grupo de LEDs (pines del 4 al 7)
+    for (int i = 0; i < 4; i++)
+    {
+      digitalWrite(segundoGrupo[i], primerGrupoEncendido ? HIGH : LOW);
+    }
+
+    primerGrupoEncendido = !primerGrupoEncendido; // Invertir el estado para el próximo ciclo
   }
 }
