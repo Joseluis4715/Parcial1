@@ -98,6 +98,7 @@ void setup()
 }
 void loop()
 {
+  secuencia4();
   char tecla = keypad.getKey();
   
   if (tecla != NO_KEY)
@@ -109,7 +110,7 @@ void loop()
       display.print(valor); // Imprime el valor ingresado en pantalla
       cadena = ""; // Reinicia la cadena para la próxima entrada
     }
-    else
+    else if (isdigit(tecla) && cadena.length() < 3) // Solo agrega dígitos si la cadena tiene menos de 3 caracteres
     {
       cadena += tecla; // Agrega la tecla a la cadena
       display.setCursor(100, 55);
@@ -118,6 +119,7 @@ void loop()
   }
   display.display(); // Actualiza la pantalla después de cada iteración
 }
+
 
 void conf_sw_btn(void)
 {
