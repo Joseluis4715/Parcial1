@@ -1,10 +1,4 @@
 #include <Arduino.h>
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_system.h"
-#include "esp_log.h"
-#include "driver/gpio.h"
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -23,10 +17,11 @@ int pinesLeds[leds] = {15, 2, 4, 16, 17, 5, 18, 19};
 
 unsigned long tactual;
 unsigned long tinicio;
-unsigned long periodo = 1000;
+unsigned long periodo = 200;
+unsigned long tultimocambio = 0;
+bool incremento = true;
 
 int currentLed = 0; // Índice del LED actualmente encendido
-int actualLed = 0;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define BTN 35
@@ -49,6 +44,8 @@ Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 void secuencia1(void);
 void secuencia2(void);
+void secuencia3(void);
+void secuencia4(void);
 
 void conf_sw_btn(void);
 void conf_timer(void);
@@ -90,11 +87,18 @@ void setup()
 
   conf_sw_btn();
   conf_timer();
+
+  // Inicialización de pines LED
+  for (int i = 0; i < leds; i++)
+  {
+    pinMode(pinesLeds[i], OUTPUT);
+  }
 }
 void loop()
 {
-  
+  secuencia4();
 }
+
 void conf_sw_btn(void)
 {
   pinMode(SW, INPUT);
@@ -113,10 +117,6 @@ void conf_timer(void)
 
 void secuencia1(void)
 {
-  for (int i = 0; i < leds; i++)
-  {
-    pinMode(pinesLeds[i], OUTPUT);
-  }
   tactual = millis();
   if (tactual - tinicio >= periodo)
   {
@@ -135,11 +135,6 @@ void secuencia1(void)
 }
 void secuencia2(void)
 {
-  for (int i = 0; i < leds; i++)
-  {
-    pinMode(pinesLeds[i], OUTPUT);
-  }
-
   unsigned long tactual = millis();
   if (tactual - tinicio >= periodo)
   {
@@ -150,5 +145,41 @@ void secuencia2(void)
     {
       digitalWrite(pinesLeds[i], !digitalRead(pinesLeds[i])); // Invierte el estado del LED
     }
+  }
+}
+
+void secuencia3(void)
+{
+  unsigned long tactual = millis();
+  if(tactual - tinicio >= 300){
+    tinicio = tactual;
+
+    digitalWrite(pinesLeds[currentLed], !digitalRead(pinesLeds[currentLed]));
+
+    if(incremento){
+      currentLed++;
+      if(currentLed == leds){
+        currentLed = leds - 2;
+        incremento = false;
+      }
+    }else{
+      currentLed--; 
+      if(currentLed < 0){
+        currentLed = 1;
+        incremento = true;
+      }
+    }
+  }
+}
+
+void secuencia4(void){
+  unsigned long tactual = millis();
+
+  if(tactual - tinicio >= periodo){
+    digitalWrite(pinesLeds[currentLed], !digitalRead(pinesLeds[currentLed]));
+
+    tinicio = tactual;
+
+    currentLed = (currentLed + 1) % leds;
   }
 }
