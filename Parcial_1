@@ -21,6 +21,8 @@ unsigned long periodo = 200;
 unsigned long tultimocambio = 0;
 bool incremento = true;
 
+String cadena = "";
+int valor = 0;
 int currentLed = 0; // Índice del LED actualmente encendido
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -41,6 +43,7 @@ byte rowPins[ROWS] = {33, 25, 26, 27}; // Filas
 byte colPins[COLS] = {14, 12, 13, 23}; // Columnas
 
 Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
 
 void secuencia1(void);
 void secuencia2(void);
@@ -96,7 +99,9 @@ void setup()
 }
 void loop()
 {
-  secuencia4();
+  char tecla = keypad.getKey();
+  cadena = cadena + tecla; 
+  valor = cadena.toInt();
 }
 
 void conf_sw_btn(void)
@@ -111,7 +116,7 @@ void conf_timer(void)
 {
   Timer0_Cfg = timerBegin(0, 80, true);
   timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);
-  timerAlarmWrite(Timer0_Cfg, 2000, true);
+  timerAlarmWrite(Timer0_Cfg, 40, true);
   timerAlarmEnable(Timer0_Cfg);
 }
 
