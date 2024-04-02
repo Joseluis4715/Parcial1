@@ -44,7 +44,6 @@ byte colPins[COLS] = {14, 12, 13, 23}; // Columnas
 
 Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-
 void secuencia1(void);
 void secuencia2(void);
 void secuencia3(void);
@@ -78,13 +77,13 @@ void setup()
   display.setTextSize(0.5);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(5, 10);
-  display.println(F("CICLO UTIL:  %"));
+  display.println(F("CICLO UTIL:     %"));
   display.setCursor(5, 25);
   display.println(F("ESTADO: "));
   display.setCursor(5, 40);
   display.println(F("SECUENCIA:"));
   display.setCursor(5, 55);
-  display.println(F("INTRO CICLO UTIL:"));
+  display.println(F("INTR CICLO UTIL: "));
   display.drawLine(0, 50, 127, 50, SSD1306_WHITE);
   display.display();
 
@@ -100,8 +99,24 @@ void setup()
 void loop()
 {
   char tecla = keypad.getKey();
-  cadena = cadena + tecla; 
-  valor = cadena.toInt();
+  
+  if (tecla != NO_KEY)
+  {
+    if (tecla == '#')
+    {
+      valor = constrain(cadena.toInt(), 0, 100); // Limita el valor entre 0 y 100
+      display.setCursor(80, 10);
+      display.print(valor); // Imprime el valor ingresado en pantalla
+      cadena = ""; // Reinicia la cadena para la próxima entrada
+    }
+    else
+    {
+      cadena += tecla; // Agrega la tecla a la cadena
+      display.setCursor(100, 55);
+      display.print(cadena); // Imprime la cadena en pantalla
+    }
+  }
+  display.display(); // Actualiza la pantalla después de cada iteración
 }
 
 void conf_sw_btn(void)
