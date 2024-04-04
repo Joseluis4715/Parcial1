@@ -91,14 +91,14 @@ void IRAM_ATTR isr_secuencia()
     secuenciaActual = 1; // Reiniciar el contador al llegar al final
   }
 }
-void IRAM_ATTR Timer0_ISR()
-{
+void IRAM_ATTR Timer0_ISR() {
   static unsigned long lastMillis = 0;
   unsigned long currentMillis = millis();
-  // Calcula el ciclo útil multiplicando el valor ingresado por el usuario (valor) por el período
-  int cicloUtilActualizado = (valor * periodo) / 100;
-  if (currentMillis - lastMillis >= cicloUtilActualizado)
-  {
+  
+  // Multiplicar el valor ingresado por 0.04 para obtener el tiempo en milisegundos
+  unsigned long tiempoMs = valor * 0.04;
+
+  if (currentMillis - lastMillis >= tiempoMs) {
     digitalWrite(pinPWM, !digitalRead(pinPWM));
     lastMillis = currentMillis;
   }
