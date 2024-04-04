@@ -24,6 +24,7 @@ unsigned long tinicio;
 unsigned long periodo = 200;
 
 bool incremento = true;
+volatile int dutyCycle = 0;
 
 String cadena = "";
 int valor = 0;
@@ -92,17 +93,18 @@ void IRAM_ATTR isr_secuencia()
   }
 }
 void IRAM_ATTR Timer0_ISR() {
-  static unsigned long lastMillis = 0;
-  unsigned long currentMillis = millis();
-  
-  // Multiplicar el valor ingresado por 0.04 para obtener el tiempo en milisegundos
-  unsigned long tiempoMs = valor * 0.04;
+  static int counter = 0; 
+  int cicloUtilActualizado = (valor * periodo) / 100; // Calcula el ciclo útil actualizado
 
-  if (currentMillis - lastMillis >= tiempoMs) {
-    digitalWrite(pinPWM, !digitalRead(pinPWM));
-    lastMillis = currentMillis;
+  if (counter < cicloUtilActualizado) {
+    digitalWrite(pinPWM, HIGH); // Enciende el motor
+  } else {
+    digitalWrite(pinPWM, LOW); // Apaga el motor
   }
+  
+  counter = (counter + 1) % periodo; // Incrementa el contador y asegura que esté en el rango del período
 }
+
 
 void setup()
 {
