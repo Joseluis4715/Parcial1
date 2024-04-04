@@ -177,6 +177,8 @@ void loop()
     if (tecla == '#')
     {
       valor = constrain(cadena.toInt(), 0, 100); // Limita el valor entre 0 y 100
+      display.fillRect(100, 10, 48, 8, SSD1306_BLACK); // Borra el área del ciclo util en pantalla
+      display.setCursor(100, 10);
       display.setCursor(100, 10);
       display.print(valor);
       display.print(F("%")); // Imprime el valor ingresado en pantalla
@@ -193,9 +195,12 @@ void loop()
     }
     else if (isdigit(tecla) && cadena.length() < 3) // Solo agrega dígitos si la cadena tiene menos de 3 caracteres
     {
+      display.fillRect(100, 55, 48, 8, SSD1306_BLACK); // Borra el área del ciclo util en pantalla
+      display.setCursor(100, 55);
       cadena += tecla; // Agrega la tecla a la cadena
       display.setCursor(100, 55);
       display.print(cadena); // Imprime la cadena en pantalla
+
     }
   }
   display.display(); // Actualiza la pantalla después de cada iteración
