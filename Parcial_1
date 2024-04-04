@@ -24,7 +24,7 @@ unsigned long tinicio;
 unsigned long periodo = 200;
 
 bool incremento = true;
-volatile int dutyCycle = 0;
+
 
 String cadena = "";
 int valor = 0;
