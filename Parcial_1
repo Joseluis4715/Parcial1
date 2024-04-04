@@ -22,7 +22,7 @@ int segundoGrupo[4] = {pinesLeds[4], pinesLeds[5], pinesLeds[6], pinesLeds[7]};
 unsigned long tactual;
 unsigned long tinicio;
 unsigned long periodo = 200;
-unsigned long tultimocambio = 0;
+
 bool incremento = true;
 
 String cadena = "";
@@ -35,6 +35,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int numSecuencias = 5; // Número total de secuencias
 int secuenciaActual = 1;     // Contador de la secuencia actual
+
+volatile bool motorEncendido = false; // Variable para seguir el estado del motor
 
 hw_timer_t *Timer0_Cfg = NULL;
 
@@ -62,11 +64,27 @@ void conf_timer(void);
 
 void IRAM_ATTR isr_start_stop()
 {
-  // Código de la interrupción de inicio/parada
+  motorEncendido = !motorEncendido; // Invertir el estado del motor al detectar la interrupción
+
+  if (motorEncendido)
+  {
+    // Encender el motor (código específico para encender el motor)
+    digitalWrite(pinPWM, HIGH);
+    timerAlarmEnable(Timer0_Cfg); // Habilitar la señal PWM
+  }
+  else
+  {
+    // Apagar el motor (código específico para apagar el motor)
+    digitalWrite(pinPWM, LOW);
+    timerAlarmDisable(Timer0_Cfg); // Deshabilitar la señal PWM
+  }
+
+  // Anular la señal PWM (dejar el pin en un estado neutro)
+  digitalWrite(pinPWM, LOW);
 }
+
 void IRAM_ATTR isr_secuencia()
 {
-  // Código de la interrupción de borrado
   secuenciaActual++; // Incrementar el contador de secuencia
   if (secuenciaActual > numSecuencias)
   {
@@ -75,8 +93,15 @@ void IRAM_ATTR isr_secuencia()
 }
 void IRAM_ATTR Timer0_ISR()
 {
-  // Alternate the logic value of the MOSFET pin
-  digitalWrite(pinPWM, !digitalRead(pinPWM));
+  static unsigned long lastMillis = 0;
+  unsigned long currentMillis = millis();
+  // Calcula el ciclo útil multiplicando el valor ingresado por el usuario (valor) por el período
+  int cicloUtilActualizado = (valor * periodo) / 100;
+  if (currentMillis - lastMillis >= cicloUtilActualizado)
+  {
+    digitalWrite(pinPWM, !digitalRead(pinPWM));
+    lastMillis = currentMillis;
+  }
 }
 
 void setup()
@@ -89,7 +114,7 @@ void setup()
   display.setTextSize(0.5);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(5, 10);
-  display.println(F("CICLO UTIL:     %"));
+  display.println(F("CICLO UTIL: "));
   display.setCursor(5, 25);
   display.println(F("ESTADO: "));
   display.setCursor(5, 40);
@@ -132,10 +157,18 @@ void loop()
     break;
   }
   // Actualizar el valor de secuencia en la pantalla OLED
-  display.fillRect(100,40,20,8,SSD1306_BLACK);
+  display.fillRect(100, 40, 20, 8, SSD1306_BLACK);
   display.setCursor(100, 40);
   display.print(secuenciaActual); // Imprimir el nuevo valor de secuencia
+  display.display();              // Actualizar la pantalla
+
+  // Mostrar el estado del motor en la pantalla OLED
+  display.fillRect(100, 25, 48, 8, SSD1306_BLACK); // Borrar el área del estado del motor en pantalla
+  display.setCursor(100, 25);
+  display.print(motorEncendido ? "ON" : "OFF"); // Imprimir el estado del motor
+
   display.display(); // Actualizar la pantalla
+
 
   char tecla = keypad.getKey();
 
@@ -144,17 +177,18 @@ void loop()
     if (tecla == '#')
     {
       valor = constrain(cadena.toInt(), 0, 100); // Limita el valor entre 0 y 100
-      display.setCursor(80, 10);
-      display.print(valor); // Imprime el valor ingresado en pantalla
+      display.setCursor(100, 10);
+      display.print(valor);
+      display.print(F("%")); // Imprime el valor ingresado en pantalla
       cadena = "";          // Reinicia la cadena para la próxima entrada
-    }else if (tecla == '*')
+    }
+    else if (tecla == '*')
     {
       // Borrar lo ingresado y el valor del ciclo util
       cadena = "";
       valor = 0;
-      display.fillRect(80, 10, 48, 8, SSD1306_BLACK); // Borra el área del ciclo util en pantalla
-      display.setCursor(80, 10);
-      display.print(F("   %")); // Vuelve a imprimir el símbolo de porcentaje
+      display.fillRect(100, 10, 48, 8, SSD1306_BLACK); // Borra el área del ciclo util en pantalla
+      display.setCursor(100, 10);
       display.fillRect(100, 55, 28, 8, SSD1306_BLACK); // Borra el área de la cadena en pantalla
     }
     else if (isdigit(tecla) && cadena.length() < 3) // Solo agrega dígitos si la cadena tiene menos de 3 caracteres
@@ -174,7 +208,6 @@ void conf_sw_btn(void)
   attachInterrupt(digitalPinToInterrupt(SW), isr_start_stop, FALLING);
   attachInterrupt(digitalPinToInterrupt(BTN), isr_secuencia, FALLING);
 }
-
 void conf_timer(void)
 {
   Timer0_Cfg = timerBegin(0, 80, true);
